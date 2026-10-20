@@ -16,6 +16,8 @@ jobs:
         run: |
           for file in js/*.js; do node --check "$file"; done
       - name: Parser and export regression
-        run: node tests/test_app.cjs
+        run: |
+          node tests/test_app.cjs
+          node tests/test_real_notes.cjs
       - name: Verify OpenXML and PWA image assets
         run: python3 tests/verify_office.py
