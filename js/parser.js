@@ -3,7 +3,7 @@
 'use strict';
 const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const number=s=>Number(String(s).replace(',','.'));
-const PN=/\b(?:[A-Z]{1,5}\d[\dA-Z-]{3,}|[A-Z]{1,5}(?:-[A-Z0-9]{2,})+|\d{1,3}[A-Z]{1,3}-?\d{3,7}|\d{1,4}-\d{3,6}(?:-\d+)?|\d{7,15})\b/gi;
+const PN=/\b(?:[A-Z]{1,5}\d[\dA-Z-]{3,}|[A-Z]{1,5}-\d{2,}(?:-\d{2,})+|\d{1,3}[A-Z]{1,3}-?\d{3,7}|\d{1,6}-\d{3,6}(?:-\d+)?|\d{7,15})\b/gi;
 const roles=[
   ['Mecânico',/\bmec(?:anicos?|anicas?|s)?\b|\bmechanics?\b/iu],
   ['Eletricista',/\beletricistas?\b|\belet(?:ric)?\b/iu],
@@ -94,7 +94,7 @@ function parsePart(line,section){
  let description=descParts.join(' ').replace(/^(?:[-–:,\/|\s]+)|(?:[-–:,\/|\s]+)$/g,'').trim();
  const rem=description.match(new RegExp('^(.+?)\\s*\\((\\d{1,4})\\s*'+qtyUnits+'?\\)$','iu'));
  if(rem){description=rem[1];quantity=Number(rem[2]);}
- if(description=== '' && !unknown && section!=='parts')return null;
+ if((description=== '' || quantity===null) && !unknown && section!=='parts')return null;
  const confidence=quantity!==null&&description?'alta':'baixa';
  return {pn,description,quantity:quantity??'',plannerComment:'',mechanicComment:'',min:'',max:'',mrp:'',source:line.trim(),confidence};
 }
