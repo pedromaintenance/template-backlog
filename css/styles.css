@@ -185,3 +185,8 @@ border:1px solid #cddde3;border-radius:7px;background:#fff;color:#243641;padding
 .parse-preview .preview-grid textarea{width:100%;min-height:245px;resize:vertical;line-height:1.55;white-space:pre-wrap}
 .parse-preview .preview-note{font-size:11px;color:#6c8290}
 @media(max-width:760px){.parse-preview .preview-grid{grid-template-columns:1fr}.parse-preview .preview-part-fields{grid-template-columns:minmax(90px,1fr) minmax(110px,1.5fr) 56px}}
+
+/* Mantém o menu de contexto aberto acima do bloco seguinte, inclusive ao rolar. */
+.row-unit.menu-open{z-index:30}
+.row-unit.menu-open>.row-card{border-color:var(--blue)}
+.row-menu-trigger[aria-expanded="true"]{background:#ecf3f5;color:var(--blue)}
