@@ -58,8 +58,8 @@ const formatHH=v=>Number(v||0).toLocaleString('pt-BR',{maximumFractionDigits:2})
       </div>` };
   }
   function rowHTML(row) {
-    const menu = `<button type="button" class="row-menu-trigger no-print" data-action="menu" aria-label="Opções da linha" title="Opções">⋯</button>
-      <div class="row-menu no-print" hidden><button type="button" data-action="edit">Editar</button>
+    const menu = `<button type="button" class="row-menu-trigger no-print" data-action="menu" aria-label="Opções da linha" aria-expanded="false" aria-controls="row-menu-${esc(row.id)}" title="Opções">⋯</button>
+      <div id="row-menu-${esc(row.id)}" class="row-menu no-print" hidden><button type="button" data-action="edit">Editar</button>
       <button type="button" data-action="duplicate">Duplicar</button>
       <button type="button" data-action="delete" class="danger">Excluir linha</button></div>`;
     let content = '', statusClass = '';
@@ -88,9 +88,15 @@ const formatHH=v=>Number(v||0).toLocaleString('pt-BR',{maximumFractionDigits:2})
     if (focusId) rowsEl.querySelector(`.row-unit[data-row-id="${CSS.escape(focusId)}"]`)?.querySelector('textarea,input[type=text]')?.focus();
   }
   function getRow(element) { const container = element.closest('.row-unit'); return container && state.rows.find(row => row.id === container.dataset.rowId); }
-  function closeMenus() {
-    rowsEl.querySelectorAll('.row-menu').forEach(el => { el.hidden = true; });
-    $('#projectMenu').hidden = true; $('#projectMenuButton').setAttribute('aria-expanded', 'false');
+  // Este aplicativo não possui projectMenu (legado do Relatório de Inspeção).
+  // Controla apenas menus dos blocos existentes e sincroniza seus estados visuais/ARIA.
+  function closeMenus(except = null) {
+    rowsEl.querySelectorAll('.row-menu').forEach(menu => {
+      const open = menu === except;
+      menu.hidden = !open;
+      menu.previousElementSibling?.setAttribute('aria-expanded', String(open));
+      menu.closest('.row-unit')?.classList.toggle('menu-open', open);
+    });
   }
   function mutateRow(row, fn, focus = false) { fn(row); changed(); render({ focusId: focus ? row.id : null }); }
   function deleteRow(row) {
@@ -110,8 +116,10 @@ const formatHH=v=>Number(v||0).toLocaleString('pt-BR',{maximumFractionDigits:2})
     const button = event.target.closest('[data-action]'); if (!button) return;
     const action = button.dataset.action, row = getRow(button); if (!row) return;
     if (action === 'menu') {
-      const menu = button.nextElementSibling, wasOpen = !menu.hidden;
-      closeMenus(); menu.hidden = wasOpen; return;
+      const menu = button.nextElementSibling;
+      if (!menu) return;
+      closeMenus(menu.hidden ? menu : null);
+      return;
     }
     if (action === 'insert') { state.rows.splice(state.rows.indexOf(row) + 1, 0, newRow()); changed(); render(); return; }
     if (action === 'choose-text') { mutateRow(row, r => { r.type = 'text'; r.text = ''; }, true); return; }
@@ -147,6 +155,14 @@ const formatHH=v=>Number(v||0).toLocaleString('pt-BR',{maximumFractionDigits:2})
       if (win) { win.document.write(`<!doctype html><meta name="viewport" content="width=device-width"><body style="margin:0;background:#132b36;display:grid;place-items:center;min-height:100vh"><img alt="Fotografia" src="${image}" style="max-width:98vw;max-height:98vh;object-fit:contain"></body>`); win.document.close(); }
     }
   });
+  // Fecha menus ao clicar fora ou pressionar Escape, sem interferir nos botões internos.
+  document.addEventListener('click', event => {
+    if (!event.target.closest('.row-menu, .row-menu-trigger')) closeMenus();
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') closeMenus();
+  });
+
   rowsEl.addEventListener('input', event => {
     const el = event.target, row = getRow(el); if (!row) return;
     if (el.dataset.field === 'text') { row.text = el.value; resizeArea(el); changed(); }
