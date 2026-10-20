@@ -95,31 +95,33 @@ function makeDOCX(state,profile='planner'){
 }
 function makeXLSX(state){
  const photos=photoEntries(state);
- const rows=[['G MINING VENTURES · MINA TZ'],[state.title],[machineLine(state)],
- [`Emitido em ${new Date().toLocaleString('pt-BR')}`],
- ['Ordem','Tipo','Sistema','Comando / Conteúdo','Resultado','Avaliação','Comentário','Foto / Arquivo']];
+ const m=state.meta||{};
+ const rows=[['G MINING VENTURES · TOCANTINZINHO'],['INSTRUÇÃO DE TRABALHO · '+(state.title||'Sem título')],['TAG: '+(m.tag||'—')+' | Modelo: '+(m.model||'—')+' | Nota: '+(m.notification||'—')+' | Ordem: '+(m.order||'—')+' | Prioridade: '+(m.priority||'—')],['Duração: '+(m.duration||'—')+' h | Elaborado por: '+(m.author||'—')+' | Data: '+(m.date||'—')],['Seção','Part Number','Descrição','Quantidade','MRP','MIN','MAX','Anotação planejador','Orientação ao mecânico','Especialidade','Profissionais','Horas','HH','Texto / Evidência']];
+ rows.push(['Falha','','','','','','','','','','','','',state.failure||'']);
+ rows.push(['Comando','','','','','','','','','','','','',state.work||'']);
+ rows.push(['Cuidados','','','','','','','','','','','','',state.safety||'']);
+ for(const a of state.labor||[])rows.push(['Equipe','','','','','','','','',a.role||'',a.count??'',a.hours??'',(Number(a.count)||0)*(Number(a.hours)||0),'']);
+ for(const a of state.parts||[])rows.push(['Peça',a.pn||'',a.description||'',a.quantity??'',a.mrp||'',a.min??'',a.max??'',a.plannerComment||'',a.mechanicComment||'','','','','','']);
+ rows.push(['Notas planejamento','','','','','','','','','','','','',state.plannerNotes||'']);
  let photoIndex=0;
  for(let i=0;i<(state.rows||[]).length;i++){
-  const row=state.rows[i],n=i+1;if(row.type==='empty')continue;
-  if(row.type==='text')rows.push([n,'Texto','',row.text||'','','','','']);
-  if(row.type==='list')for(const item of row.items||[])rows.push([n,'Lista','',item.text||'',item.done?'Marcado':'Pendente','','','']);
-  if(row.type==='photo')for(const item of row.photos||[]){const picture=photos[photoIndex++];rows.push([n,'Fotografia','',item.caption||'','','','',picture?.ref||'']);}
-  if(row.type==='assessment'){
-   const ownPhotos=row.assessment==='not-ok'?(row.photos||[]):[];
-   const refs=ownPhotos.map(()=>photos[photoIndex++]?.ref||'');
-   rows.push([n,'Avaliação',row.system||'',row.command||'',assessmentTitle(row),severityText(row),row.assessment==='not-ok'?(row.comment||''):'',refs.join('; ')]);
-  }
+ const r=state.rows[i];if(r.type==='empty')continue;
+ if(r.type==='text')rows.push(['Texto','','','','','','','','','','','','',r.text||'']);
+ if(r.type==='list')for(const it of r.items||[])rows.push(['Lista','','','','','','','','','','','','',(it.done?'[x] ':'[ ] ')+(it.text||'')]);
+ if(r.type==='photo')for(const it of r.photos||[]){const photo=photos[photoIndex++];rows.push(['Fotografia','','','','','','','','','','','','',(it.caption||'')+' | '+(photo?.ref||'')]);}
+ if(r.type==='assessment'){const pics=r.assessment==='not-ok'?(r.photos||[]):[];const names=pics.map(()=>photos[photoIndex++]?.ref||'');
+ rows.push(['Avaliação','','','','','','','','','','','','',(r.command||'')+' | '+assessmentTitle(r)+' '+severityText(r)+' | '+(r.assessment==='not-ok'?r.comment||'':'')+' | '+names.join('; ')]);}
  }
  const sheetPhotos=[['Ordem do bloco','Arquivo','Legenda','Visualização']];
  for(const item of photos)sheetPhotos.push([item.block,item.ref,item.caption||'','']);
  function colId(n){let res='';while(n){n--;res=String.fromCharCode(65+n%26)+res;n=Math.floor(n/26);}return res;}
  function cell(v,col,row,style){const ref=colId(col)+row;if(typeof v==='number')return `<c r="${ref}"${style?' s="'+style+'"':''}><v>${v}</v></c>`;return `<c r="${ref}" t="inlineStr"${style?' s="'+style+'"':''}><is><t xml:space="preserve">${xmlEscape(v)}</t></is></c>`;}
  function sheet(data,isPhotos=false){const body=data.map((vals,i)=>{let cells='';vals.forEach((v,j)=>cells+=cell(v,j+1,i+1,(i===4&&!isPhotos||i===0&&isPhotos)?1:(i===1&&!isPhotos?2:0)));return `<row r="${i+1}"${isPhotos&&i>0?' ht="102" customHeight="1"':''}>${cells}</row>`;}).join('');
- const widths=(isPhotos?[15,31,48,44]:[12,18,27,68,17,20,60,40]).map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('');
+ const widths=(isPhotos?[15,31,48,44]:[20,23,44,14,12,10,10,55,55,20,14,12,12,85]).map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('');
  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheetViews><sheetView workbookViewId="0"/></sheetViews><sheetFormatPr defaultRowHeight="20"/><cols>${widths}</cols><sheetData>${body}</sheetData>${isPhotos&&photos.length?'<drawing r:id="rId1"/>':''}</worksheet>`;}
  const entries=[{name:'[Content_Types].xml',data:`<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Default Extension="jpg" ContentType="image/jpeg"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${photos.length?'<Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>':''}</Types>`},
  {name:'_rels/.rels',data:`<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`},
- {name:'xl/workbook.xml',data:`<?xml version="1.0"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Relatório" sheetId="1" r:id="rId1"/><sheet name="Fotografias" sheetId="2" r:id="rId2"/></sheets></workbook>`},
+ {name:'xl/workbook.xml',data:`<?xml version="1.0"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Planejador" sheetId="1" r:id="rId1"/><sheet name="Fotografias" sheetId="2" r:id="rId2"/></sheets></workbook>`},
  {name:'xl/_rels/workbook.xml.rels',data:`<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`},
  {name:'xl/styles.xml',data:`<?xml version="1.0"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="3"><font><sz val="11"/><name val="Calibri"/></font><font><b/><color rgb="FFFFFFFF"/><sz val="11"/></font><font><b/><color rgb="FF005471"/><sz val="16"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF005471"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment wrapText="1" vertical="top"/></xf><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFill="1" applyFont="1"/><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs></styleSheet>`},
  {name:'xl/worksheets/sheet1.xml',data:sheet(rows)},{name:'xl/worksheets/sheet2.xml',data:sheet(sheetPhotos,true)}];
@@ -131,6 +133,14 @@ function makeXLSX(state){
  }
  return GMINZip.pack(entries);
 }
-function exportFile(state,type){const name=basename(state.title);if(type==='pdf')return printPDF(state);if(type==='html')return download(new Blob([reportHTML(state)],{type:'text/html;charset=utf-8'}),name+'.html');if(type==='docx')return download(makeDOCX(state),name+'.docx');if(type==='xlsx')return download(makeXLSX(state),name+'.xlsx');throw Error('Formato inválido');}
-global.GMINExport={exportFile,reportHTML,makeDOCX,makeXLSX,basename,download};
+function exportFile(state,profile='planner',format='pdf'){
+if(!['planner','mechanic'].includes(profile))throw Error('Perfil de exportação inválido');
+const name=basename((state.meta?.order?'OS_'+state.meta.order+'_':'')+(state.title||'Instrucao_de_Trabalho'))+'_'+(profile==='planner'?'Planejador':'Mecanico');
+if(format==='pdf')return printPDF(state,profile);
+if(format==='json'){if(profile!=='planner')throw Error('JSON restrito ao planejador');return download(new Blob([JSON.stringify(state,null,2)],{type:'application/json;charset=utf-8'}),name+'.json');}
+if(format==='docx')return download(makeDOCX(state,profile),name+'.docx');
+if(format==='xlsx'){if(profile!=='planner')throw Error('Excel restrito ao planejador');return download(makeXLSX(state),name+'.xlsx');}
+throw Error('Formato de arquivo inválido');
+}
+global.GMINExport={exportFile,reportHTML,makeDOCX,makeXLSX,basename};
 })(window);
