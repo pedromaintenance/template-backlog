@@ -19,7 +19,7 @@ const qtyUnits='(?:unidades?|unds?|unid\\.?|und\\.?|un\\.?|pcs?\\.?|pe[cç]as?|p
 const qtyEnd=new RegExp('(?:^|\\s|[(/|;,])(?:q(?:uanti)?d(?:ade)?\\.?\\s*[:=]?\\s*)?(\\d{1,4})(?:\\s*'+qtyUnits+')?\\s*(?:$|[)/|;,])','iu');
 const quantityLoose=new RegExp('(?:q(?:uanti)?d(?:ade)?\\.?\\s*[:=]?\\s*)(\\d{1,4})|(?:^|\\s)(\\d{1,4})\\s*'+qtyUnits+'\\b|\\b[x×]\\s*(\\d{1,4})\\b|\\b(\\d{1,4})\\s*[x×]\\b','iu');
 const timeRE=/(\d+(?:[.,]\d+)?)\s*(?:horas?|hrs?\.?|h\b|minutos?|min\.?)/iu;
-const separator=/\s+\-\s+|\s*[|;,/]\s*|\t+/u;
+const separator=/\s+-\s+|\s*[|;,/]\s*|\t+/u;
 const headers=[
  ['parts',/^(?:(?:lista\s*de\s*)?materiais?|pe[cç]as?|sobressalentes?|part\s*numbers?|pns?)\s*(?:previst[oa]s?|necess[aá]ri[oa]s?|requerid[oa]s?)?\s*:?\s*$/iu],
  ['labor',/^(?:m[aã]o[\s-]*de[\s-]*obra|equipe|recursos?\s*humanos?|hh\s*previst[oa]s?)\s*:?\s*$/iu],
