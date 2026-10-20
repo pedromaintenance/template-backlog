@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#005471"><meta name="description" content="Instruções de Trabalho — G Mining Mina TZ. Editor offline para planejamento e execução de ordens de serviço.">
+<link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="css/styles.css"><link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<title>GMIN | Instrução de Trabalho</title>
+</head>
+<body>
+<header class="app-top no-print"><div class="app-top-inner">
+ <div class="app-brand"><span class="brand-mark">G</span><span class="brand-copy"><b>GMIN <i>Instruções de Trabalho</i></b><small>Engenharia • PCM • Manutenção de Mina</small></span></div>
+ <div class="top-right"><span class="save-status" id="saveStatus" role="status" aria-live="polite">Inicializando...</span><button type="button" id="backupButton" class="subtle-btn">↓ JSON editável</button><button type="button" id="restoreButton" class="subtle-btn">↑ Importar JSON</button><button type="button" id="newButton" class="subtle-btn">＋ Novo</button><button type="button" id="installButton" class="subtle-btn">Instalar</button></div>
+</div></header>
+<main class="workspace">
+<section class="hero-bar no-print"><div><span class="eyebrow">DOCUMENTAÇÃO DE APOIO À ORDEM DE SERVIÇO</span><h1>Instrução de Trabalho</h1><p>Do escopo técnico ao material de campo — sem substituir o registro oficial da OS no SAP.</p></div><button type="button" class="btn gold" id="smartImportButton">✦ Interpretar texto de nota/OS</button></section>
+<section class="toolbar no-print"><div class="toolbar-heading"><strong>Versão para impressão e exportação</strong><small>As anotações internas nunca aparecem no documento do mecânico.</small></div><div class="export-cluster">
+ <span class="export-label">Planejador</span>
+ <button type="button" class="export-btn" data-export="planner:pdf">PDF</button><button type="button" class="export-btn" data-export="planner:docx">Word</button><button type="button" class="export-btn" data-export="planner:xlsx">Excel</button><button type="button" class="export-btn" data-export="planner:json">JSON</button>
+ <span class="export-sep"></span><span class="export-label">Mecânico</span>
+ <button type="button" class="export-btn primary" data-export="mechanic:pdf">Imprimir / PDF</button>
+</div></section>
+<article class="report-sheet" id="reportSheet">
+ <div class="report-head">
+  <div class="report-head-top"><img class="report-logo" id="brandLogo" alt="G Mining Ventures — Mina Tocantinzinho"><span class="report-kicker">ENGENHARIA &amp; MANUTENÇÃO DE MINA<br><b>INSTRUÇÃO DE TRABALHO</b></span></div>
+  <div class="label-title">TÍTULO DA ORDEM DE SERVIÇO</div><textarea id="orderTitle" class="report-title" placeholder="Ex.: Substituir mangueira do circuito de avanço" rows="2" maxlength="180" aria-label="Título da Ordem"></textarea>
+  <div class="form-grid four">
+    <label>Equipamento (TAG)<input data-meta="tag" placeholder="Ex.: 040-005"></label>
+    <label>Modelo<input data-meta="model" placeholder="Ex.: CAT 777"></label>
+    <label>Número da Nota<input data-meta="notification" inputmode="numeric" placeholder="Nota SAP"></label>
+    <label>Número da Ordem<input data-meta="order" inputmode="numeric" placeholder="OS SAP"></label>
+    <label>Prioridade<select data-meta="priority"><option value="">Selecione...</option><option value="P0">P0 · Imediata</option><option value="P1">P1 · Alta</option><option value="P2">P2 · Planejada</option><option value="P3">P3 · Oportunidade</option></select></label>
+    <label>Duração prevista (horas)<input data-meta="duration" type="number" step="0.25" min="0" placeholder="Ex.: 2"></label>
+    <label>Elaborado por<input data-meta="author" placeholder="Nome do responsável"></label>
+    <label>Data de elaboração<input data-meta="date" type="date"></label>
+  </div>
+ </div>
+ <section class="form-section">
+  <div class="section-head"><div><span class="eyebrow">01 · RECURSOS</span><h2>Mão de obra prevista</h2><p>Informe profissionais e horas por especialidade. O total de HH não é a duração da parada.</p></div><button type="button" id="addLabor" class="btn-outline no-print">＋ Especialidade</button></div>
+  <div class="table-scroll"><table class="edit-table"><thead><tr><th>Especialidade</th><th>Quantidade</th><th>Horas por profissional</th><th>HH</th><th class="no-print"></th></tr></thead><tbody id="laborRows"></tbody></table></div><p class="total-line" id="laborTotal">HH previstos: 0</p>
+ </section>
+ <section class="form-section">
+  <div class="section-head"><div><span class="eyebrow">02 · ESCOPO TÉCNICO</span><h2>Instrução de Trabalho</h2><p>Registre fatos observados, diagnóstico quando confirmado e comando claro do serviço.</p></div></div>
+  <label class="block-label">Descrição da falha / condição encontrada<textarea id="failure" rows="4" placeholder="Onde, em qual condição, o que foi observado e quais os efeitos..."></textarea></label>
+  <label class="block-label">Comando do serviço / atividades a executar<textarea id="work" rows="6" placeholder="Inspecionar, testar, substituir, montar, ajustar, medir e validar conforme especificação técnica..."></textarea></label>
+  <label class="block-label">Cuidados de execução / referências técnicas (opcional)<textarea id="safety" rows="3" placeholder="Referência do manual, números de mídia, bloqueio, isolamento e verificações antes da liberação..."></textarea></label>
+ </section>
+ <section class="form-section">
+  <div class="section-head"><div><span class="eyebrow">03 · APROVISIONAMENTO</span><h2>Lista de Peças</h2><p>Observações internas e orientações para o mecânico são independentes.</p></div><button type="button" id="addPart" class="btn-outline no-print">＋ Adicionar peça</button></div>
+  <div class="table-scroll"><table class="edit-table part-table"><thead><tr><th>Part Number</th><th>Descrição</th><th>Quantidade</th><th>Orientação para o mecânico</th><th class="no-print"></th></tr></thead><tbody id="partRows"></tbody></table></div>
+  <details class="planner-details no-print" open><summary>▾ Planejamento / estoque — campos restritos à versão do planejador</summary>
+   <div class="table-scroll"><table class="edit-table planner-table"><thead><tr><th>Part Number</th><th>MRP</th><th>MIN</th><th>MAX</th><th>Comentários e encaminhamento do planejador</th></tr></thead><tbody id="plannerRows"></tbody></table></div>
+   <label class="block-label">Notas gerais do planejamento<textarea id="plannerNotes" rows="3" placeholder="Saldo de estoque, PR/PO, ETA, reparametrização, necessidade de cadastro, ferramentas..."></textarea></label>
+  </details>
+ </section>
+ <section class="form-section">
+  <div class="section-head"><div><span class="eyebrow">04 · EVIDÊNCIAS</span><h2>Fotos da Falha e do Catálogo</h2><p>Blocos livres como no Relatório de Inspeção. Adicione foto, texto, lista ou avaliação e reorganize.</p></div></div>
+  <div id="reportRows" class="report-rows" aria-label="Blocos de evidência"></div>
+ </section>
+ <footer class="sheet-footer">G MINING VENTURES · TOCANTINZINHO GOLD MINE · Documento auxiliar · Validar os dados no SAP antes de executar.</footer>
+</article>
+<div class="footer-export no-print"><span>Dados armazenados apenas neste dispositivo. Faça backup em JSON.</span><button type="button" class="export-btn" data-export="planner:docx">Word planejador</button><button type="button" class="export-btn" data-export="planner:xlsx">Excel planejador</button><button type="button" class="export-btn primary" data-export="mechanic:pdf">Imprimir mecânico</button></div>
+</main>
+<dialog id="importDialog" class="import-dialog no-print"><div class="dialog-head"><div><span class="eyebrow">INTERPRETAÇÃO AUTOMÁTICA</span><h2>Importar descrição longa</h2></div><button type="button" id="closeImport" class="icon-button" aria-label="Fechar">✕</button></div>
+<p>Cole o texto da nota ou OS. A classificação é feita no próprio navegador, sem IA externa. Revise os campos antes de aplicar.</p>
+<textarea id="rawImport" rows="10" placeholder="Ex.:\nVazamento na linha de avanço.\nSubstituir mangueira.\nBG01866763 / Válvula hidráulica / 2 und\n2 mecânicos / 4 horas\nDuração: 4 horas"></textarea>
+<div class="import-actions"><button type="button" class="btn gold" id="parseButton">Analisar texto</button></div>
+<div id="parsePreview" class="parse-preview" hidden></div>
+<div class="dialog-footer"><label class="inline-check"><input type="checkbox" id="appendImport" checked> Adicionar às informações existentes (não substituir)</label><button type="button" class="btn primary" id="applyImport" disabled>Aplicar após revisão</button></div>
+</dialog>
+<input id="restoreInput" type="file" accept="application/json,.json" hidden>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<script defer src="js/logo-data.js"></script><script defer src="js/zip.js"></script><script defer src="js/storage.js"></script><script defer src="js/parser.js"></script><script defer src="js/exports.js"></script><script defer src="js/app.js"></script>
+</body></html>

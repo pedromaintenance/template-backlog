@@ -1,0 +1,21 @@
+name: GMIN Instrução de Trabalho — QA
+on:
+  push:
+    branches: [main, feature/instrucao-de-trabalho]
+  pull_request:
+    branches: [main]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: JavaScript syntax
+        run: |
+          for file in js/*.js; do node --check "$file"; done
+      - name: Parser and export regression
+        run: node tests/test_app.cjs
+      - name: Verify OpenXML and PWA image assets
+        run: python3 tests/verify_office.py
