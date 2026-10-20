@@ -20,7 +20,7 @@ const parsed=parser.parse('CONDIÇÃO ENCONTRADA:\nVazamento na mangueira.\nMATE
 assert.equal(parsed.parts.length,1);assert.equal(parsed.labor.length,1);assert.equal(parsed.duration,4);assert.match(parsed.work,/Vazamento/);assert.match(parsed.work,/Substituir/);assert.equal(parsed.totalHH,8);
 assert.equal(parser.parse('2 mecânicos / 3 horas').duration,null,'duration is distinct from HH');
 const state={kind:'gmin-work-instruction',title:'Substituir válvula',meta:{tag:'040-005',model:'CAT 777',order:'123456',notification:'10055',priority:'P1',duration:'2',author:'PCM',date:'2026-10-19'},failure:'Vazamento',work:'Substituir a válvula',safety:'Bloquear sistema',plannerNotes:'PR sigilosa 0001',labor:[{role:'Mecânico',count:2,hours:2}],parts:[{pn:'BG01155919',description:'Válvula',quantity:2,mrp:'V1',min:2,max:4,plannerComment:'Intervenção interna confidencial',mechanicComment:'Aplicar torque conforme manual'}],rows:[{type:'text',text:'Marcação próxima ao cilindro'},{type:'photo',photos:[]}]};
-const context={window:{GMIN_LOGO_DATA:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwsB9t8t1zYAAAAASUVORK5CYII='},TextEncoder,Blob,Uint8Array,ArrayBuffer,console};
+const context={atob,window:{GMIN_LOGO_DATA:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwsB9t8t1zYAAAAASUVORK5CYII='},TextEncoder,Blob,Uint8Array,ArrayBuffer,console};
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../js/zip.js'),'utf8'),context);
 context.GMINZip=context.window.GMINZip;
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../js/exports.js'),'utf8'),context);
