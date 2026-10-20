@@ -301,17 +301,24 @@ $('#applyImport').addEventListener('click',()=>{
  if(!parsed)return;
  const additive=$('#appendImport').checked;
  if(!additive){state.labor=[];state.parts=[];state.failure='';state.work='';state.meta.duration='';}
- for(const l of parsed.labor)state.labor.push({id:uid(),role:l.role,count:l.count,hours:l.hours??'',source:l.source});
+ let laborAdded=0,partsAdded=0,duplicatesSkipped=0;
+ for(const l of parsed.labor){
+   const exists=additive&&state.labor.some(old=>old.role===l.role&&Number(old.count)===Number(l.count)&&String(old.hours??'')===String(l.hours??''));
+   if(exists){duplicatesSkipped++;continue;}
+   state.labor.push({id:uid(),role:l.role,count:l.count,hours:l.hours??'',source:l.source});laborAdded++;
+ }
  for(const p of parsed.parts){
    const note=p.conditional
      ?[p.mechanicComment,'MATERIAL CONDICIONAL: confirmar necessidade após inspeção.'].filter(Boolean).join(' ')
      :p.mechanicComment||'';
-   state.parts.push({id:uid(),pn:p.pn,description:p.description,quantity:p.quantity,mechanicComment:note,plannerComment:p.conditional?'Item condicional: verificar necessidade em campo.':'',mrp:'',min:'',max:'',source:p.source,conditional:!!p.conditional});
+   const existing=additive&&state.parts.find(old=>GMINParser.partKey(old)===GMINParser.partKey(p));
+   if(existing){duplicatesSkipped++;continue;} // Jamais sobrescrever MRP/MIN/MAX e comentários já revisados.
+   state.parts.push({id:uid(),pn:p.pn,description:p.description,quantity:p.quantity,mechanicComment:note,plannerComment:p.conditional?'Item condicional: verificar necessidade em campo.':'',mrp:'',min:'',max:'',source:p.source,conditional:!!p.conditional});partsAdded++;
  }
  if(parsed.duration!==null&&parsed.duration!=='')state.meta.duration=String(parsed.duration);
- if(parsed.failure)state.failure=[state.failure,parsed.failure].filter(Boolean).join('\n\n');
- if(parsed.work)state.work=[state.work,parsed.work].filter(Boolean).join('\n\n');
- const msg=`Importados: ${parsed.labor.length} recursos, ${parsed.parts.length} materiais. Confira a prévia e os itens condicionais.`;
+ if(parsed.failure&&!state.failure.includes(parsed.failure))state.failure=[state.failure,parsed.failure].filter(Boolean).join('\n\n');
+ if(parsed.work&&!state.work.includes(parsed.work))state.work=[state.work,parsed.work].filter(Boolean).join('\n\n');
+ const msg=`Importados: ${laborAdded} recurso(s), ${partsAdded} material(is). ${duplicatesSkipped?duplicatesSkipped+' já existente(s) preservado(s). ':''}Revise os dados antes da execução.`;
  $('#importDialog').close();hydrate();changed();toast(msg);
 });
 rowsEl.addEventListener('paste',async e=>{const row=getRow(e.target);if(!row||row.type!=='photo')return;const files=[...(e.clipboardData?.files||[])].filter(f=>f.type.startsWith('image/'));if(!files.length)return;e.preventDefault();for(const f of files){try{row.photos.push({id:uid(),caption:'Imagem colada',...await encodeImage(f)});}catch(err){toast('Falha ao colar imagem.');}}render();changed();});
