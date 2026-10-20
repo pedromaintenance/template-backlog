@@ -170,3 +170,18 @@ border:1px solid #cddde3;border-radius:7px;background:#fff;color:#243641;padding
 @media(max-width:980px){.form-grid.four{grid-template-columns:repeat(2,minmax(0,1fr))}.hero-bar{align-items:flex-start;flex-wrap:wrap}.toolbar{flex-direction:column;align-items:flex-start}.export-cluster{justify-content:flex-start}}
 @media(max-width:650px){.form-grid.four{grid-template-columns:1fr 1fr;gap:9px}.app-top-inner{align-items:flex-start;flex-wrap:wrap}.top-right{justify-content:flex-start}.report-sheet{padding:24px 12px 20px}.section-head{align-items:flex-start;flex-wrap:wrap}.section-head h2{font-size:18px}.edit-table{min-width:600px}.parse-preview .preview-grid{grid-template-columns:1fr}.choice-group{grid-template-columns:1fr 1fr}.hero-bar{gap:12px}.report-kicker{font-size:8px}.report-kicker b{font-size:10px}.subtle-btn{padding:7px}.import-dialog{padding:15px}}
 @media print{.no-print,.planner-details,.row-menu,.row-add-wrap,.drag-handle,.photo-actions,.remove-row{display:none!important}.report-sheet{box-shadow:none;border:0;padding:4mm;width:100%}.form-section{break-inside:auto}body{background:#fff}.edit-table input,.edit-table textarea{border:0;background:transparent}.report-head{break-inside:avoid}.app-top{display:none}}
+
+/* v2 — Revisão contextual do interpretador de notas */
+.parse-preview .preview-grid{align-items:start;grid-template-columns:repeat(2,minmax(0,1fr))}
+.parse-preview .preview-box{max-height:330px}
+.parse-preview .preview-part{padding:9px 2px 10px}
+.parse-preview .preview-part-fields{display:grid;grid-template-columns:minmax(105px,1fr) minmax(130px,1.6fr) 66px;gap:5px}
+.parse-preview .preview-part-fields input{width:100%;min-width:0;padding:6px}
+.parse-preview .preview-part-meta{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin-top:5px;color:#566b76}
+.parse-preview .preview-part-meta label{display:inline-flex;align-items:center;gap:5px}
+.parse-preview .preview-part-meta input{width:auto}
+.parse-preview .preview-part-meta span{font-size:11px;color:#946300}
+.parse-preview .preview-part>input[data-prop="mechanicComment"]{width:100%;margin-top:6px}
+.parse-preview .preview-grid textarea{width:100%;min-height:245px;resize:vertical;line-height:1.55;white-space:pre-wrap}
+.parse-preview .preview-note{font-size:11px;color:#6c8290}
+@media(max-width:760px){.parse-preview .preview-grid{grid-template-columns:1fr}.parse-preview .preview-part-fields{grid-template-columns:minmax(90px,1fr) minmax(110px,1.5fr) 56px}}
