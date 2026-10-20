@@ -8,8 +8,8 @@ const PN=/\b(?:[A-Z]{1,5}\d[\dA-Z-]{3,}|[A-Z]{2,6}-\d{2,}(?:-\d+)+|\d{1,3}[A-Z]{
 const roles=[
  ['Mecânico',/\bmecanicos?\b|\bmecanicas?\b|\bmec\b|\bmechanics?\b/u],
  ['Eletricista',/\beletricistas?\b|\beletricos?\b|\belet\b/u],
- ['Lubrificador',/\blubrificadores?\b|\blub\b|\blubr\b/u],
- ['Soldador',/\bsoldadores?\b|\bsolda\b/u],
+ ['Lubrificador',/\blubrificador(?:es)?\b|\blub\b|\blubr\b/u],
+ ['Soldador',/\bsoldador(?:es)?\b|\bsolda\b/u],
  ['Borracheiro',/\bborracheiros?\b|\bpneus?\s*(?:tecnico)?\b/u],
  ['Instrumentista',/\binstrumentistas?\b/u],
  ['Caldeireiro',/\bcaldeireiros?\b/u],
