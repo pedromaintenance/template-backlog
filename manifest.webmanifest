@@ -1,0 +1,19 @@
+{
+  "name": "GMIN · Instrução de Trabalho — Mina TZ",
+  "short_name": "GMIN Instruções",
+  "description": "Editor offline de instruções de trabalho e documentação auxiliar às ordens de manutenção de mina.",
+  "id": "/template-backlog/index.html",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#edf2f4",
+  "theme_color": "#005471",
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
