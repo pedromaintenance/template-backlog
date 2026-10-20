@@ -7,13 +7,13 @@ const PN=/\b(?:[A-Z]{1,5}\d[\dA-Z-]{3,}|[A-Z]{1,5}-\d{2,}(?:-\d{2,})+|\d{1,3}[A-
 const roles=[
   ['Mecânico',/\bmec(?:anicos?|anicas?|s)?\b|\bmechanics?\b/iu],
   ['Eletricista',/\beletricistas?\b|\belet(?:ric)?\b/iu],
-  ['Lubrificador',/\blubrificadores?\b|\blub(?:r)?\b/iu],
-  ['Soldador',/\bsoldadores?\b|\bsold(?:a)?\b/iu],
+  ['Lubrificador',/\blubrificador(?:es)?\b|\blub(?:r)?\b/iu],
+  ['Soldador',/\bsoldador(?:es)?\b|\bsolda\b/iu],
   ['Borracheiro',/\bborracheiros?\b|\bpneus?\s*(?:tech|t[eé]cnico)?\b/iu],
   ['Instrumentista',/\binstrumentistas?\b/iu],
   ['Técnico',/\btecnicos?\b/iu],
   ['Caldeireiro',/\bcaldeireiros?\b/iu],
-  ['Operador',/\boperadores?\b/iu]
+  ['Operador',/\boperador(?:es)?\b/iu]
 ];
 const qtyUnits='(?:unidades?|unds?|unid\\.?|und\\.?|un\\.?|pcs?\\.?|pe[cç]as?|p[cç]s?\\.?|jogos?|kits?|pares?)';
 const qtyEnd=new RegExp('(?:^|\\s|[(/|;,])(?:q(?:uanti)?d(?:ade)?\\.?\\s*[:=]?\\s*)?(\\d{1,4})(?:\\s*'+qtyUnits+')?\\s*(?:$|[)/|;,])','iu');
