@@ -19,5 +19,6 @@ jobs:
         run: |
           node tests/test_app.cjs
           node tests/test_real_notes.cjs
+          node tests/test_row_menu.cjs
       - name: Verify OpenXML and PWA image assets
         run: python3 tests/verify_office.py
