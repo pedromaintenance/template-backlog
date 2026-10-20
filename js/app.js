@@ -265,7 +265,7 @@ if(obj.parts.length>2000||obj.labor.length>200||obj.rows.length>1000)throw Error
 const o=fresh();o.title=String(obj.title||'');o.meta={...metaEmpty(),...(obj.meta||{})};
 for(const k of ['failure','work','safety','plannerNotes'])o[k]=String(obj[k]||'');
 o.labor=obj.labor.map(x=>({id:uid(),role:String(x.role||''),count:x.count??'',hours:x.hours??'',source:String(x.source||'')}));
-o.parts=obj.parts.map(x=>({id:uid(),pn:String(x.pn||''),description:String(x.description||''),quantity:x.quantity??'',mechanicComment:String(x.mechanicComment||''),plannerComment:String(x.plannerComment||''),mrp:String(x.mrp||''),min:x.min??'',max:x.max??'',source:String(x.source||'')}));
+o.parts=obj.parts.map(x=>({id:uid(),pn:String(x.pn||''),description:String(x.description||''),quantity:x.quantity??'',mechanicComment:String(x.mechanicComment||''),plannerComment:String(x.plannerComment||''),mrp:String(x.mrp||''),min:x.min??'',max:x.max??'',source:String(x.source||''),conditional:!!x.conditional}));
 o.rows=obj.rows.map(x=>({...newRow(['text','list','photo','assessment','empty'].includes(x.type)?x.type:'empty'),text:String(x.text||''),command:String(x.command||''),system:String(x.system||''),method:String(x.method||''),assessment:['ok','not-ok'].includes(x.assessment)?x.assessment:'',severity:severityOptions.some(p=>p.value===x.severity)?x.severity:'',comment:String(x.comment||''),items:(Array.isArray(x.items)?x.items:[]).slice(0,1000).map(i=>({id:uid(),text:String(i.text||''),done:!!i.done})),photos:(Array.isArray(x.photos)?x.photos:[]).slice(0,150).map(cleanPhoto).filter(Boolean)}));if(!o.rows.length)o.rows=[newRow()];return o;
 }
 $('#backupButton').addEventListener('click',()=>GMINExport.exportFile(state,'planner','json'));
@@ -276,15 +276,44 @@ document.querySelectorAll('[data-export]').forEach(btn=>btn.addEventListener('cl
 $('#smartImportButton').addEventListener('click',()=>$('#importDialog').showModal());
 $('#closeImport').addEventListener('click',()=>$('#importDialog').close());
 $('#importDialog').addEventListener('close',()=>{parsed=null;$('#applyImport').disabled=true;});
+
 function previewCandidate(){
-const p=parsed;
-const labor=p.labor.map((r,i)=>`<div class="preview-line"><input data-preview-labor="${i}" data-prop="count" type="number" min="0" step="1" value="${esc(r.count)}" style="width:60px"> <input data-preview-labor="${i}" data-prop="role" value="${esc(r.role)}" style="width:138px"> <input data-preview-labor="${i}" data-prop="hours" type="number" min="0" step="0.25" value="${esc(r.hours??'')}" style="width:68px"> h</div>`).join('')||'<div>Não identificada</div>';
-const parts=p.parts.map((r,i)=>`<div class="preview-line"><input data-preview-part="${i}" data-prop="pn" value="${esc(r.pn)}" style="width:130px"> <input data-preview-part="${i}" data-prop="description" value="${esc(r.description)}" style="width:185px"> <input data-preview-part="${i}" data-prop="quantity" type="number" min="0" step="1" value="${esc(r.quantity)}" style="width:62px"></div>`).join('')||'<div>Não identificadas</div>';
-$('#parsePreview').innerHTML=`<div class="preview-grid"><div><h3>Equipe (${p.labor.length})</h3><div class="preview-box">${labor}</div></div><div><h3>Peças (${p.parts.length})</h3><div class="preview-box">${parts}</div></div></div><h3>Duração total (horas)</h3><input data-preview-duration type="number" min="0" step="0.25" value="${esc(p.duration??'')}" placeholder="Não informada" style="max-width:160px"><h3>Texto remanescente → Instrução de Trabalho</h3><textarea id="remainingWork">${esc(p.work)}</textarea>${p.warnings.map(w=>`<p class="preview-warn">⚠ ${esc(w)}</p>`).join('')}${p.uncertain.length?`<h3>Linhas para revisar</h3><div class="preview-box">${p.uncertain.map(v=>`<div class="preview-line">${esc(v.line)}</div>`).join('')}</div>`:''}`;
-$('#parsePreview').hidden=false;$('#applyImport').disabled=false;}
+ const p=parsed,pl=$('#parsePreview');
+ const labor=p.labor.map((r,i)=>`<div class="preview-line"><input data-preview-labor="${i}" data-prop="count" type="number" min="1" step="1" value="${esc(r.count)}" style="width:60px" aria-label="Profissionais"> <input data-preview-labor="${i}" data-prop="role" value="${esc(r.role)}" style="width:132px" aria-label="Especialidade"> <input data-preview-labor="${i}" data-prop="hours" type="number" min="0" step="0.25" value="${esc(r.hours??'')}" style="width:68px" aria-label="Horas por profissional"> h</div>`).join('')||'<div class="preview-line">Não identificada</div>';
+ const parts=p.parts.map((r,i)=>`<div class="preview-line preview-part"><div class="preview-part-fields"><input data-preview-part="${i}" data-prop="pn" value="${esc(r.pn)}" aria-label="Part Number" title="Part Number"><input data-preview-part="${i}" data-prop="description" value="${esc(r.description)}" aria-label="Descrição" title="Descrição"><input data-preview-part="${i}" data-prop="quantity" type="number" min="0" step="1" value="${esc(r.quantity)}" aria-label="Quantidade" title="Quantidade"></div><div class="preview-part-meta"><label><input data-preview-part="${i}" data-prop="conditional" type="checkbox" ${r.conditional?'checked':''}> Material condicional</label>${r.confidence==='baixa'?'<span>⚠ Conferir PN / quantidade</span>':''}</div>${r.mechanicComment?`<input data-preview-part="${i}" data-prop="mechanicComment" value="${esc(r.mechanicComment)}" title="Orientação ao mecânico" aria-label="Orientação ao mecânico">`:''}</div>`).join('')||'<div class="preview-line">Não identificadas</div>';
+ pl.innerHTML=`<div class="preview-grid"><div><h3>Equipe (${p.labor.length})</h3><div class="preview-box">${labor}</div></div><div><h3>Peças (${p.parts.length})</h3><div class="preview-box">${parts}</div></div></div><h3>Duração total prevista (horas)</h3><input data-preview-duration type="number" min="0" step="0.25" value="${esc(p.duration??'')}" placeholder="Não informada" style="max-width:160px"><p class="preview-note">Duração de parada não é a soma das HH; deixe em branco quando desconhecida.</p><div class="preview-grid"><div><h3>Condição encontrada / histórico</h3><textarea id="remainingFailure" rows="8" aria-label="Condição encontrada">${esc(p.failure||'')}</textarea></div><div><h3>Comando do serviço / texto remanescente</h3><textarea id="remainingWork" rows="8" aria-label="Instrução de trabalho">${esc(p.work||'')}</textarea></div></div>${p.warnings.map(w=>`<p class="preview-warn">⚠ ${esc(w)}</p>`).join('')}${p.uncertain.length?`<h3>Linhas a revisar (mantidas no texto ou marcadas nas peças)</h3><div class="preview-box">${p.uncertain.map(v=>`<div class="preview-line">${esc(v.line)}</div>`).join('')}</div>`:''}`;
+ pl.hidden=false;$('#applyImport').disabled=false;
+}
 $('#parseButton').addEventListener('click',()=>{const raw=$('#rawImport').value;if(!raw.trim()){toast('Cole o texto antes de analisar.');return;}parsed=GMINParser.parse(raw);previewCandidate();});
-$('#parsePreview').addEventListener('input',e=>{if(!parsed)return;const el=e.target;if(el.hasAttribute('data-preview-labor'))parsed.labor[Number(el.dataset.previewLabor)][el.dataset.prop]=el.value;if(el.hasAttribute('data-preview-part'))parsed.parts[Number(el.dataset.previewPart)][el.dataset.prop]=el.value;if(el.hasAttribute('data-preview-duration'))parsed.duration=el.value;if(el.id==='remainingWork')parsed.work=el.value;});
-$('#applyImport').addEventListener('click',()=>{if(!parsed)return;const additive=$('#appendImport').checked;if(!additive){state.labor=[];state.parts=[];state.work='';state.meta.duration='';}for(const l of parsed.labor)state.labor.push({id:uid(),role:l.role,count:l.count,hours:l.hours??'',source:l.source});for(const p of parsed.parts)state.parts.push({id:uid(),pn:p.pn,description:p.description,quantity:p.quantity,mechanicComment:'',plannerComment:'',mrp:'',min:'',max:'',source:p.source});if(parsed.duration!==null&&parsed.duration!=='')state.meta.duration=String(parsed.duration);if(parsed.work)state.work=[state.work,parsed.work].filter(Boolean).join('\n\n');const msg=`Importados: ${parsed.labor.length} recursos, ${parsed.parts.length} peças. Confira os dados.`;$('#importDialog').close();hydrate();changed();toast(msg);});
+$('#parsePreview').addEventListener('input',e=>{
+ if(!parsed)return;const el=e.target;
+ if(el.hasAttribute('data-preview-labor'))parsed.labor[Number(el.dataset.previewLabor)][el.dataset.prop]=el.value;
+ if(el.hasAttribute('data-preview-part')){
+   const part=parsed.parts[Number(el.dataset.previewPart)];
+   part[el.dataset.prop]=el.dataset.prop==='conditional'?el.checked:el.value;
+ }
+ if(el.hasAttribute('data-preview-duration'))parsed.duration=el.value;
+ if(el.id==='remainingFailure')parsed.failure=el.value;
+ if(el.id==='remainingWork')parsed.work=el.value;
+});
+$('#parsePreview').addEventListener('change',e=>{if(!parsed)return;const el=e.target;if(el.dataset.prop==='conditional')parsed.parts[Number(el.dataset.previewPart)].conditional=el.checked;});
+$('#applyImport').addEventListener('click',()=>{
+ if(!parsed)return;
+ const additive=$('#appendImport').checked;
+ if(!additive){state.labor=[];state.parts=[];state.failure='';state.work='';state.meta.duration='';}
+ for(const l of parsed.labor)state.labor.push({id:uid(),role:l.role,count:l.count,hours:l.hours??'',source:l.source});
+ for(const p of parsed.parts){
+   const note=p.conditional
+     ?[p.mechanicComment,'MATERIAL CONDICIONAL: confirmar necessidade após inspeção.'].filter(Boolean).join(' ')
+     :p.mechanicComment||'';
+   state.parts.push({id:uid(),pn:p.pn,description:p.description,quantity:p.quantity,mechanicComment:note,plannerComment:p.conditional?'Item condicional: verificar necessidade em campo.':'',mrp:'',min:'',max:'',source:p.source,conditional:!!p.conditional});
+ }
+ if(parsed.duration!==null&&parsed.duration!=='')state.meta.duration=String(parsed.duration);
+ if(parsed.failure)state.failure=[state.failure,parsed.failure].filter(Boolean).join('\n\n');
+ if(parsed.work)state.work=[state.work,parsed.work].filter(Boolean).join('\n\n');
+ const msg=`Importados: ${parsed.labor.length} recursos, ${parsed.parts.length} materiais. Confira a prévia e os itens condicionais.`;
+ $('#importDialog').close();hydrate();changed();toast(msg);
+});
 rowsEl.addEventListener('paste',async e=>{const row=getRow(e.target);if(!row||row.type!=='photo')return;const files=[...(e.clipboardData?.files||[])].filter(f=>f.type.startsWith('image/'));if(!files.length)return;e.preventDefault();for(const f of files){try{row.photos.push({id:uid(),caption:'Imagem colada',...await encodeImage(f)});}catch(err){toast('Falha ao colar imagem.');}}render();changed();});
 window.addEventListener('pagehide',()=>{if(saveTimer)saveNow();});
 let installPrompt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;$('#installButton').hidden=false;});$('#installButton').addEventListener('click',async()=>{if(installPrompt){installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;}else{toast('No Chrome, abra ⋮ → Instalar aplicativo (se disponível).');}});
