@@ -40,7 +40,7 @@ function parseLabor(line,section) {
  const chunks=raw.split(/\s*(?:\+|&|\be\b)\s*(?=\d+\s*(?:mec|eletric|lubr|sold|borracheir|tecnic|instrument|caldeireir|operador))/iu);
  for(const chunk of chunks){
   for(const [role,re] of roles) {
-   const match=re.exec(chunk);if(!match)continue;
+   const match=re.exec(norm(chunk));if(!match)continue;
    const before=chunk.slice(0,match.index);
    const after=chunk.slice(match.index+match[0].length);
    const count=(before.match(/(?:^|[^\d])(\d{1,3})\s*(?:x\s*)?$/u)||after.match(/^\s*[:=(]?\s*(\d{1,3})\b/u)||[])[1];
