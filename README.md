@@ -93,3 +93,27 @@ O GitHub Actions verifica sintaxe e regressão a cada push ou Pull Request. Para
 - Câmera, impressão, instalação e paginação de documentos extensos devem ser conferidas no dispositivo real. Fotografias são compactadas; preserve o original quando necessário.
 
 Próxima evolução: refinar as heurísticas com exemplos reais de descrições de notas e ordens, preservando sempre a revisão humana.
+
+
+## Interpretador contextual v2 — exemplos de campo
+
+O analisador foi revisado com **notas reais de S·O·S. da roda dianteira, códigos de falha CAT 6030 e manutenção das linhas piloto**. A análise ocorre inteiramente no navegador, sem envio de dados.
+
+A classificação agora usa primeiro as seções da descrição longa:
+
+- **Condição / histórico:** TEXTO BREVE, CONDIÇÃO ENCONTRADA, HISTÓRICO S·O·S., HISTÓRICO DE MANUTENÇÃO, LEITURA DA ENGENHARIA, O QUE FALHOU?, POR QUE FALHOU?
+- **Serviço:** ATIVIDADE RECOMENDADA, RECOMENDAÇÃO DA ENGENHARIA, INTERVENÇÃO SUGERIDA, COLETA DE AMOSTRAS, EVIDÊNCIAS OBRIGATÓRIAS, CRITÉRIO PARA PRÓXIMA TRATATIVA, OBSERVAÇÕES e TIPO DE SERVIÇO.
+- **Peças:** MATERIAIS PREVISTOS, MATERIAL NECESSÁRIO, PEÇAS NECESSÁRIAS. Também reconhece linhas estruturadas de peças na seção de coleta de amostras.
+- **Material condicional:** REFERÊNCIA TÉCNICA CONDICIONAL; o item é marcado como condicional e sua justificativa é preservada.
+- **Mão de obra:** MÃO DE OBRA ESTIMADA, PREVISÃO DE MÃO-DE-OBRA, RECURSOS INICIAIS, além de linhas com quantidade e especialidade.
+
+**Casos agora tratados:** `Mecânico: 3h` significa **1 mecânico, 3 h**, não 3 mecânicos. `Mecânicos: 2` significa dois profissionais, ainda sem duração. Relatórios `U330-56279-2554`, números de notas/OS e referências técnicas citadas durante uma atividade não são automaticamente peças. `1Z0101` repetido na descrição da coleta e na lista principal é consolidado **sem dobrar a quantidade**. Materiais sem PN ou sem quantidade explícita, como óleo a definir pelo SIS, são preservados com alerta de conferência. Se a mesma nota for importada novamente com “Adicionar”, os itens já existentes são preservados, inclusive anotações MIN/MAX/MRP.
+
+A prévia permite conferir separadamente **condição encontrada/histórico** e **comando do serviço**, e editar manualmente PN, descrição, quantidade, mão de obra, duração e indicação de material condicional antes de aplicar.
+
+**Limitações:** as heurísticas não verificam o catálogo OEM ou a disponibilidade real no SAP. A quantidade de óleo, a elegibilidade de uma peça condicional e o diagnóstico final devem ser confirmados pelo planejador e pela equipe de campo. Os testes cobrem exemplos fornecidos, não todos os formatos possíveis de descrição longa.
+
+Para executar também as regressões de campo:
+~~~bash
+node tests/test_real_notes.cjs
+~~~
