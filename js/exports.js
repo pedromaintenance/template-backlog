@@ -42,12 +42,39 @@ const meta=[['Equipamento',m.tag],['Modelo',m.model],['Nota SAP',m.notification]
 return '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>'+E(state.title||'Instrução de Trabalho')+'</title><style>'+styles+'</style></head><body><article><header><img src="'+global.GMIN_LOGO_DATA+'" alt="G Mining"><span>ENGENHARIA & MANUTENÇÃO DE MINA<br><b>INSTRUÇÃO DE TRABALHO</b></span></header><h1>'+E(state.title||'Ordem sem título')+'</h1><div class="meta">'+meta+'</div><h2>01 · Mão de obra prevista</h2>'+labor+'<p class="hint">Duração da intervenção e homens-hora são estimativas diferentes.</p><h2>02 · Condição encontrada / falha</h2><div class="text">'+br(state.failure)+'</div><h2>03 · Instrução de Trabalho / serviço</h2><div class="text">'+br(state.work)+'</div>'+(state.safety?'<h3>Cuidados e referências</h3><div class="text">'+br(state.safety)+'</div>':'')+'<h2>04 · Lista de peças</h2>'+parts+(planner&&state.plannerNotes?'<h3>Observações internas do planejamento</h3><div class="text">'+br(state.plannerNotes)+'</div>':'')+'<h2>05 · Evidências de falha, catálogos e avaliações</h2>'+blocks+'<footer>G MINING VENTURES · MINA TOCANTINZINHO · Documento auxiliar — conferir com a OS SAP.</footer></article>'+(print?'<script>window.addEventListener("load",()=>setTimeout(()=>window.print(),350))<\/script>':'')+'</body></html>';
 }
 function printPDF(state,profile){const w=window.open('','_blank');if(!w)throw Error('Janela de impressão bloqueada. Habilite pop-ups.');w.document.open();w.document.write(reportHTML(state,{profile,print:true}));w.document.close();}
-function makeDOCX(state){
+function makeDOCX(state,profile='planner'){
   const pictures=photoEntries(state),media=[],rels=[{id:'rId1',type:'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image',target:'media/logo.png'}],logo=dataBytes(global.GMIN_LOGO_DATA);media.push({name:'word/media/logo.png',data:logo});
   let picNum=2;for(const p of pictures){p.rid='rId'+picNum++;p.mediaName='word/media/'+p.ref;media.push({name:p.mediaName,data:dataBytes(p.dataUrl)});rels.push({id:p.rid,type:'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image',target:'media/'+p.ref});}
   const p=(text,opt={})=>`<w:p><w:pPr>${opt.center?'<w:jc w:val="center"/>':''}${opt.bullet?'<w:ind w:left="360"/>':''}${opt.space?'<w:spacing w:after="150"/>':''}</w:pPr><w:r><w:rPr>${opt.bold?'<w:b/>':''}${opt.color?`<w:color w:val="${opt.color}"/>`:''}${opt.size?`<w:sz w:val="${opt.size}"/>`:''}${opt.strike?'<w:strike/>':''}</w:rPr><w:t xml:space="preserve">${xmlEscape(text)}</w:t></w:r></w:p>`;
   function drawing(rid,id,width,height,maxW=5000000){const ow=Math.max(1,width||1200),oh=Math.max(1,height||900),maxH=6500000,cx=Math.min(maxW,Math.round(maxH*ow/oh)),cy=Math.round(cx*oh/ow);return `<w:p><w:r><w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${id}" name="Imagem ${id}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${id}" name="Fotografia ${id}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;}
-  const blocks=[drawing('rId1',1,1000,401,2050000),p('ENGENHARIA & MANUTENÇÃO DE MINA',{color:'005471',bold:true,size:18}),p(state.title,{color:'005471',bold:true,size:32,space:true}),p(machineLine(state),{color:'005471',bold:true,size:20,space:true}),p('Relatório de campo · '+new Date().toLocaleString('pt-BR'),{color:'8295A0',size:18,space:true})];
+  const fmt=v=>v===null||v===undefined||v===''?'—':String(v);
+  const tbl=(heads,rows)=>{const cw=Math.floor(9300/heads.length);
+    const cell=(t,bold=false)=>'<w:tc><w:tcPr><w:tcW w:w="'+cw+'" w:type="dxa"/></w:tcPr>'+p(fmt(t),{bold,size:16})+'</w:tc>';
+    return '<w:tbl><w:tblPr><w:tblW w:w="9300" w:type="dxa"/><w:tblLayout w:type="autofit"/></w:tblPr>'+[heads,...rows].map((row,i)=>'<w:tr>'+row.map(t=>cell(t,i===0)).join('')+'</w:tr>').join('')+'</w:tbl>';};
+  const m=state.meta||{};
+  const blocks=[
+   drawing('rId1',1,1000,401,2050000),
+   p('ENGENHARIA & MANUTENÇÃO DE MINA',{color:'005471',bold:true,size:18}),
+   p('INSTRUÇÃO DE TRABALHO',{color:'C3942C',bold:true,size:30,space:true}),
+   p(state.title||'Ordem sem título',{color:'005471',bold:true,size:28,space:true}),
+   p('TAG: '+fmt(m.tag)+' | Modelo: '+fmt(m.model),{bold:true}),
+   p('Nota SAP: '+fmt(m.notification)+' | Ordem SAP: '+fmt(m.order)+' | Prioridade: '+fmt(m.priority),{bold:true}),
+   p('Duração prevista: '+fmt(m.duration)+' h | Autor: '+fmt(m.author)+' | Data: '+fmt(m.date),{space:true}),
+   p('01. MÃO DE OBRA PREVISTA',{color:'005471',bold:true,size:22,space:true}),
+   tbl(['Especialidade','Profissionais','Horas / pessoa','HH'],(state.labor||[]).map(l=>[l.role,l.count,l.hours,(Number(l.count)||0)*(Number(l.hours)||0)])),
+   p('Total: '+(state.labor||[]).reduce((a,l)=>a+(Number(l.count)||0)*(Number(l.hours)||0),0)+' HH',{bold:true,space:true}),
+   p('02. FALHA / CONDIÇÃO ENCONTRADA',{color:'005471',bold:true,size:22,space:true}),
+   ...String(state.failure||'—').split('\n').map(t=>p(t,{space:true})),
+   p('03. INSTRUÇÃO DE TRABALHO / SERVIÇO',{color:'005471',bold:true,size:22,space:true}),
+   ...String(state.work||'—').split('\n').map(t=>p(t,{space:true})),
+   ...(state.safety?[p('CUIDADOS DE EXECUÇÃO',{color:'005471',bold:true,size:20}),...String(state.safety).split('\n').map(t=>p(t,{space:true}))]:[]),
+   p('04. LISTA DE PEÇAS',{color:'005471',bold:true,size:22,space:true}),
+   profile==='planner'
+    ?tbl(['PN','Descrição','Qtd','MRP','MIN','MAX','Anotações PCM','Orientações execução'],(state.parts||[]).map(t=>[t.pn,t.description,t.quantity,t.mrp,t.min,t.max,t.plannerComment,t.mechanicComment]))
+    :tbl(['Part Number','Descrição','Qtd','Orientações de execução'],(state.parts||[]).map(t=>[t.pn,t.description,t.quantity,t.mechanicComment])),
+   ...(profile==='planner'&&state.plannerNotes?[p('NOTAS DO PLANEJADOR',{color:'005471',bold:true}),...String(state.plannerNotes).split('\n').map(t=>p(t,{space:true}))]:[]),
+   p('05. EVIDÊNCIAS FOTOGRÁFICAS E CATÁLOGOS',{color:'005471',bold:true,size:22,space:true})
+  ];
   let imageIndex=0;for(const r of safeRows(state)){
     if(r.type==='text'){for(const line of String(r.text||'').split('\n'))blocks.push(p(line,{space:true}));}
     if(r.type==='list')for(const item of r.items||[])blocks.push(p((item.done?'☑ ':'☐ ')+(item.text||''),{space:true,strike:item.done}));
